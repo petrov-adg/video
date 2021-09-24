@@ -1,0 +1,38 @@
+menu "qt5base configuration"
+	depends on PACKAGE_qt5base-core
+
+choice
+	prompt "DoubleConversion"
+	default QT5BASE_DOUBLECONVERSION_DISABLE
+
+config QT5BASE_DOUBLECONVERSION_QT
+	bool "QT variant"
+
+config QT5BASE_DOUBLECONVERSION_SYSTEM
+	bool "System library"
+
+config QT5BASE_DOUBLECONVERSION_DISABLE
+	bool "Disable"
+
+endchoice
+
+choice
+	prompt "QPA Backends"
+	default QT5BASE_QPA_VNC
+
+config QT5BASE_QPA_VNC
+	bool "VNC"
+
+config QT5BASE_QPA_DIRECTFB
+	bool "DirectFB"
+
+config QT5BASE_QPA_NONE
+	bool "Disable"
+
+endchoice
+
+config QT5BASE_OPTIMIZE_SIZE
+	bool "Optimize builds for size instant of speed"
+	default n
+
+endmenu

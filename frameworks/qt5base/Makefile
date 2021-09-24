@@ -12,9 +12,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=qt5base
-PKG_VERSION:=5.15.0
+PKG_VERSION:=5.15.2
 PKG_RELEASE:=1
-PKG_HASH:=bc9a21e9f6fff9629019fdf9f989f064751d5073c3a28dc596def92f4d4275c6
+PKG_HASH:=909fad2591ee367993a75d7e2ea50ad4db332f05e1c38dd7a5a274e156a4e0f8
 
 PKG_SYS_NAME:=qtbase-everywhere-src-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_SYS_NAME).tar.xz
@@ -41,6 +41,10 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/nls.mk
 include ./files/qmake.mk
+
+define Package/qt5base-core/config
+  source "$(SOURCE)/Config.in"
+endef
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_qt5base-plugin-imageformats-jpeg \
@@ -102,7 +106,7 @@ endef
 define Package/qt5base-core
   $(call Package/qt5base/Default)
   TITLE+=core
-  DEPENDS+=+libpthread +zlib +libzstd +libpcre2-16 +libstdcpp +librt +libdouble-conversion $(ICONV_DEPENDS) +PACKAGE_icu:icu #FIXME: do not include ICONV_DEPENDS if ICU is selected (though, that's only an issue when using GNU iconv)
+  DEPENDS+=+libpthread +zlib +libzstd +libpcre2-16 +libstdcpp +librt +QT5BASE_DOUBLECONVERSION_SYSTEM:libdouble-conversion $(ICONV_DEPENDS) +PACKAGE_icu:icu #FIXME: do not include ICONV_DEPENDS if ICU is selected (though, that's only an issue when using GNU iconv)
 endef
 
 define Package/qt5base-gui
@@ -263,11 +267,17 @@ endef
 
 ###### sql
 
-#define Package/qt5base-plugin-sqldrivers-sqlite
-#  $(call Package/qt5base/Default)
-#  TITLE+=sqldriver sqlite (plugin)
-#  DEPENDS+=+qt5base-core +qt5base-sql +libsqlite3
-#endef
+define Package/qt5base-plugin-sqldrivers-sqlite
+  $(call Package/qt5base/Default)
+  TITLE+=sqldriver sqlite (plugin)
+  DEPENDS+=+qt5base-core +qt5base-sql +libsqlite3
+endef
+
+define Package/qt5base-plugin-sqldrivers-mysql
+  $(call Package/qt5base/Default)
+  TITLE+=sqldriver mysql (plugin)
+  DEPENDS+=+qt5base-core +qt5base-sql +libmysqlclient
+endef
 
 define Package/qt5base-examples
   $(call Package/qt5base/Default)
@@ -336,7 +346,7 @@ define Build/Configure
 			--confirm-license \
 			--release=yes \
 			--optimized-tools=no \
-			--optimize-size=no \
+			--optimize-size=$(if $(QT5BASE_OPTIMIZE_SIZE),yes,no) \
 			--strip=no \
 			--shared=yes \
 			--framework=no \
@@ -354,7 +364,8 @@ define Build/Configure
 			--widgets=$(if $(CONFIG_PACKAGE_qt5base-widgets),yes,no) \
 			--dbus=no \
 			--accessibility=yes \
-			--doubleconversion=system \
+			$(if $(QT5BASE_DOUBLECONVERSION_QT),--doubleconversion=qt,) \
+			$(if $(QT5BASE_DOUBLECONVERSION_SYSTEM),--doubleconversion=system,) \
 			--glib=no \
 			--eventfd=no \
 			--inotify=no \
@@ -365,7 +376,7 @@ define Build/Configure
 			--journald=no \
 			--syslog=no \
 			--ssl=$(if $(CONFIG_PACKAGE_qt5base-network),yes,no) \
-			--openssl-linked$(if $(CONFIG_PACKAGE_qt5base-network),,=no) \
+			$(if $(CONFIG_PACKAGE_qt5base-network),--openssl-linked=,) \
 			--libproxy=no \
 			--system-proxies=yes \
 			--cups=no \
@@ -377,7 +388,7 @@ define Build/Configure
 			--opengles3=no \
 			--egl=no \
 			--xcb-xlib=no \
-			--qpa=$(if $(CONFIG_PACKAGE_qt5base-plugin-platforms-linuxfb),linuxfb,) \
+			$(if $(CONFIG_PACKAGE_qt5base-plugin-platforms-linuxfb)--qpa=linuxfb,) \
 			--directfb=no \
 			--eglfs=no \
 			--gbm=no \
@@ -397,11 +408,11 @@ define Build/Configure
 			--libpng=system \
 			--sql-db2=no \
 			--sql-ibase=no \
-			--sql-mysql=no \
+			--sql-mysql=$(if $(CONFIG_PACKAGE_qt5base-sql-mysql),yes,no) \
 			--sql-oci=no \
 			--sql-odbc=no \
 			--sql-psql=no \
-			--sql-sqlite=no \
+			--sql-sqlite=$(if $(CONFIG_PACKAGE_qt5base-sql-sqlite),yes,no) \
 			--sql-sqlite2=no \
 			--sql-tds=no \
 			--sqlite=no \
@@ -678,6 +689,7 @@ $(eval $(call BuildPackage,qt5base-plugin-platforms-linuxfb))
 $(eval $(call BuildPackage,qt5base-plugin-platforms-minimal))
 $(eval $(call BuildPackage,qt5base-plugin-platforms-offscreen))
 $(eval $(call BuildPackage,qt5base-plugin-platforms-vnc))
-#$(eval $(call BuildPackage,qt5base-plugin-sqldrivers-sqlite))
+$(eval $(call BuildPackage,qt5base-plugin-sqldrivers-sqlite))
+$(eval $(call BuildPackage,qt5base-plugin-sqldrivers-mysql))
 $(eval $(call BuildPackage,qt5base-examples))
 $(eval $(call HostBuild))
