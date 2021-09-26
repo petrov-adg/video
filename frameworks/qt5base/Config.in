@@ -1,5 +1,5 @@
-menu "qt5base configuration"
-	depends on PACKAGE_qt5base-core
+menu "qt5base"
+	depends on PACKAGE_qt5base
 
 choice
 	prompt "DoubleConversion"
@@ -11,7 +11,7 @@ config QT5BASE_DOUBLECONVERSION_QT
 config QT5BASE_DOUBLECONVERSION_SYSTEM
 	bool "System library"
 
-config QT5BASE_DOUBLECONVERSION_DISABLE
+config QT5BASE_DOUBLECONVERSION_NO
 	bool "Disable"
 
 endchoice

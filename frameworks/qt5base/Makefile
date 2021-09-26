@@ -81,15 +81,22 @@ define Package/qt5base/Default
   CATEGORY:=Video
   SUBMENU:=Frameworks and Toolkits
   TITLE:=Qt5base
+  DEPENDS:=qt5base
   URL:=http://qt.io
   MAINTAINER:=Mirko Vogt <mirko-openwrt@nanl.de>
 endef
 
-# define Package/qt5base
-#   $(call Package/qt5base/Default)
-#   DEPENDS:=
-#   MENU:=1
-# endef
+define Package/qt5base
+  $(call Package/qt5base/Default)
+  DEPENDS:=+zlib +librt +libstdcpp
+  MENU:=1
+endef
+
+define Package/qt5base-core
+  $(call Package/qt5base/Default)
+  TITLE+=core
+  DEPENDS+=+libpthread +zlib +libzstd +libpcre2-16 +libstdcpp +librt $(ICONV_DEPENDS) +PACKAGE_icu:icu #FIXME: do not include ICONV_DEPENDS if ICU is selected (though, that's only an issue when using GNU iconv)
+endef
 
 define Package/qt5base-concurrent
   $(call Package/qt5base/Default)
@@ -101,12 +108,6 @@ define Package/qt5base-gl
   $(call Package/qt5base/Default)
   TITLE+=gl
   DEPENDS+=+qt5base-core +qt5base-gui +qt5base-widgets @BROKEN
-endef
-
-define Package/qt5base-core
-  $(call Package/qt5base/Default)
-  TITLE+=core
-  DEPENDS+=+libpthread +zlib +libzstd +libpcre2-16 +libstdcpp +librt +QT5BASE_DOUBLECONVERSION_SYSTEM:libdouble-conversion $(ICONV_DEPENDS) +PACKAGE_icu:icu #FIXME: do not include ICONV_DEPENDS if ICU is selected (though, that's only an issue when using GNU iconv)
 endef
 
 define Package/qt5base-gui
@@ -366,6 +367,7 @@ define Build/Configure
 			--accessibility=yes \
 			$(if $(QT5BASE_DOUBLECONVERSION_QT),--doubleconversion=qt,) \
 			$(if $(QT5BASE_DOUBLECONVERSION_SYSTEM),--doubleconversion=system,) \
+			$(if $(QT5BASE_DOUBLECONVERSION_NO),--doubleconversion=no,) \
 			--glib=no \
 			--eventfd=no \
 			--inotify=no \
@@ -459,7 +461,7 @@ define Host/Configure
 			--widgets=no \
 			--dbus=no \
 			--accessibility=no \
-			--doubleconversion=qt \
+			--doubleconversion=no \
 			--glib=no \
 			--eventfd=no \
 			--inotify=no \
@@ -662,7 +664,7 @@ define Package/qt5base-examples/install
 	$(call Build/Install/Examples,$(1))
 endef
 
-# $(eval $(call BuildPackage,qt5base))
+$(eval $(call BuildPackage,qt5base))
 $(eval $(call BuildPackage,qt5base-concurrent))
 $(eval $(call BuildPackage,qt5base-core))
 $(eval $(call BuildPackage,qt5base-gui))
